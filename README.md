@@ -1,16 +1,22 @@
-## Zk-cycle-macros
+## Introduction
+* This repository contains two crates 
+  * `risc0-cycle-macros`
+  * `risc0-cycle-utils`
+
+## risc0-cycle-macros
 * Contains the `cycle-tracker` macro which can be used to annotate functions that run inside the risc0 vm
 * In order to use the macro, the following changes need to be made
 * Cargo.toml
 ```toml
 [dependencies]
-sov-zk-cycle-macros = {path = "../../utils/zk-cycle-macros", optional=true}
+risc0-cycle-macros = { git = "https://github.com/Sovereign-Labs/risc0-cycle-macros.git", rev="362a5a7", optional = true }
+risc0-cycle-utils = { git = "https://github.com/Sovereign-Labs/risc0-cycle-macros.git", rev="362a5a7", optional = true }
 risc0-zkvm = { version = "0.16", default-features = false, features = ["std"], optional=true}
 risc0-zkvm-platform = { version = "0.16", optional=true}
 sov-zk-cycle-utils = {path = "../../utils/zk-cycle-utils", optional=true}
 
 [features]
-bench = ["sov-zk-cycle-macros/bench","sov-zk-cycle-utils", "risc0-zkvm","risc0-zkvm-platform"]
+bench = ["risc0-cycle-macros", "risc0-cycle-utils", "risc0-zkvm", "risc0-zkvm-platform"]
 ```
 * The feature gating is needed because we don't want the cycle tracker scaffolding to be used unless the `bench` feature is enabled
 * If the `bench` feature is not enabled, the risc0 host will not be built with the necessary syscalls to support tracking cycles
@@ -37,3 +43,6 @@ fn begin_slot(
     self.checkpoint = Some(working_set.checkpoint());
 }
 ```
+
+## risc0-cycle-utils
+This crate contains utilities that provide the syscall name and helper functions for printing the cycle count
