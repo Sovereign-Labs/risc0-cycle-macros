@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["Sovereign Labs <info@sovereign.xyz>"]
+homepage = "https://www.sovereign.xyz"
+publish = true
+repository = "https://github.com/sovereign-labs/risc0-cycle-macros"
+
+[workspace.dependencies]
+risc0-zkvm = { version = "0.19", default-features = false }
+risc0-zkvm-platform = { version = "0.19" }

@@ -1,0 +1,37 @@
+[package]
+name = "risc0-cycle-macros"
+description = "Macros to wrap functions and emit cycle counts from the risc0 VM"
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+version = { workspace = true }
+readme = "README.md"
+resolver = "2"
+autotests = false
+
+[lib]
+proc-macro = true
+
+[[test]]
+name = "tests"
+path = "tests/all_tests.rs"
+
+[dependencies]
+anyhow = "1"
+syn = { version = "2", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"
+borsh = "1"
+
+[dev-dependencies]
+trybuild = "1"
+risc0-cycle-macros = { path = "" }
+risc0-cycle-utils = { path = "../utils" }
+risc0-zkvm = { workspace = true, default-features = false, features = ["std"] }
+risc0-zkvm-platform = { workspace = true }
+
+[features]
+bench = []
