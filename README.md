@@ -13,7 +13,6 @@ risc0-cycle-macros = { git = "https://github.com/Sovereign-Labs/risc0-cycle-macr
 risc0-cycle-utils = { git = "https://github.com/Sovereign-Labs/risc0-cycle-macros.git", rev="362a5a7", optional = true }
 risc0-zkvm = { version = "0.16", default-features = false, features = ["std"], optional=true}
 risc0-zkvm-platform = { version = "0.16", optional=true}
-sov-zk-cycle-utils = {path = "../../utils/zk-cycle-utils", optional=true}
 
 [features]
 bench = ["risc0-cycle-macros", "risc0-cycle-utils", "risc0-zkvm", "risc0-zkvm-platform"]
