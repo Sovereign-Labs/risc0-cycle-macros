@@ -25,7 +25,7 @@ bench = ["risc0-cycle-macros", "risc0-cycle-utils", "risc0-zkvm", "risc0-zkvm-pl
 ```rust,ignore
 //
 #[cfg(all(target_os = "zkvm", feature = "bench"))]
-use sov_zk_cycle_macros::cycle_tracker;
+use risc0_cycle_macros::cycle_tracker;
 // 
 //
 #[cfg_attr(all(target_os = "zkvm", feature = "bench"), cycle_tracker)]
