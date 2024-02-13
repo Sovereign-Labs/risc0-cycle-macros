@@ -11,9 +11,9 @@ use syn::{parse_macro_input, ItemFn};
 /// function takes because prover time is directly proportional to the number of riscv cycles
 /// generated. It does this by making use of a risc0 provided function
 /// ```rust,ignore
-/// risc0_zkvm::guest::env::get_cycle_count
+/// risc0_zkvm_platform::syscall::sys_cycle_count
 /// ```
-/// The macro essentially generates new function with the same name by wrapping the body with a get_cycle_count
+/// The macro essentially generates new function with the same name by wrapping the body with a sys_cycle_count
 /// at the beginning and end of the function, subtracting it and then emitting it out using the
 /// a custom syscall that is generated when the prover is run with the `bench` feature.
 /// `send_recv_slice` is used to communicate and pass a slice to the syscall that we defined.
@@ -22,10 +22,7 @@ use syn::{parse_macro_input, ItemFn};
 pub fn cycle_tracker(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
 
-    match wrap_function(input) {
-        Ok(ok) => ok,
-        Err(err) => err.to_compile_error().into(),
-    }
+    wrap_function(input).unwrap_or_else(|err| err.to_compile_error().into())
 }
 
 fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
@@ -42,9 +39,9 @@ fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
 
     let result = quote! {
         #visibility fn #name #generics (#inputs) #output #where_clause {
-            let before = #risc0_zkvm::guest::env::get_cycle_count();
+            let before = #risc0_zkvm_platform::syscall::sys_cycle_count();
             let result = (|| #block)();
-            let after = #risc0_zkvm::guest::env::get_cycle_count();
+            let after = #risc0_zkvm_platform::syscall::sys_cycle_count();
 
             // simple serialization to avoid pulling in bincode or other libs
             let tuple = (stringify!(#name).to_string(), (after - before) as u64);
