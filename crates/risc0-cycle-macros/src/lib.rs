@@ -29,6 +29,7 @@ fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
     let visibility = &input.vis;
     let name = &input.sig.ident;
     let inputs = &input.sig.inputs;
+    let _docs: Vec<&syn::Attribute> = input.attrs.iter().filter(|&attr| attr.path().is_ident("doc")).collect();
     let output = &input.sig.output;
     let block = &input.block;
     let generics = &input.sig.generics;
@@ -37,7 +38,9 @@ fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
     let risc0_zkvm_platform =
         syn::Ident::new("risc0_zkvm_platform", proc_macro2::Span::call_site());
 
+    //         #( #docs )*
     let result = quote! {
+
         #visibility fn #name #generics (#inputs) #output #where_clause {
             let before = #risc0_zkvm_platform::syscall::sys_cycle_count();
             let result = (|| #block)();
