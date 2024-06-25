@@ -20,18 +20,12 @@ name = "tests"
 path = "tests/all_tests.rs"
 
 [dependencies]
-anyhow = "1"
 syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
-borsh = "1"
 
 [dev-dependencies]
 trybuild = "1"
 risc0-cycle-macros = { path = "" }
-risc0-cycle-utils = { path = "../utils" }
 risc0-zkvm = { workspace = true, default-features = false, features = ["std"] }
 risc0-zkvm-platform = { workspace = true }
-
-[features]
-bench = []
