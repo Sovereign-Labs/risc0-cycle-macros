@@ -54,9 +54,8 @@ fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
             serialized.extend(&size_bytes);
 
             // calculate the syscall name.
-            let cycle_string = String::from("cycle_metrics\0");
             let metrics_syscall_name = unsafe {
-                #risc0_zkvm_platform::syscall::SyscallName::from_bytes_with_nul(cycle_string.as_ptr())
+                #risc0_zkvm_platform::syscall::SyscallName::from_bytes_with_nul("cycle_metrics\0".as_bytes().as_ptr())
             };
 
             #risc0_zkvm::guest::env::send_recv_slice::<u8,u8>(metrics_syscall_name, &serialized);
