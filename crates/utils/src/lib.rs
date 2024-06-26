@@ -2,7 +2,6 @@ use risc0_zkvm_platform::syscall::SyscallName;
 
 // Safety: string has null terminated
 pub const SYSCALL_NAME_METRICS: SyscallName = unsafe { SyscallName::from_bytes_with_nul("cycle_metrics\0".as_bytes().as_ptr()) };
-pub const SYSCALL_NAME_CYCLES: SyscallName = unsafe { SyscallName::from_bytes_with_nul("cycle_count\0".as_bytes().as_ptr()) };
 
 pub fn get_syscall_name() -> SyscallName {
     SYSCALL_NAME_METRICS
@@ -21,7 +20,7 @@ pub fn cycle_count_callback(input: risc0_zkvm::Bytes) -> risc0_zkvm::Result<risc
 }
 
 pub fn get_syscall_name_cycles() -> SyscallName {
-   SYSCALL_NAME_CYCLES
+    risc0_zkvm_platform::syscall::nr::SYS_CYCLE_COUNT
 }
 
 pub fn print_cycle_count() {
