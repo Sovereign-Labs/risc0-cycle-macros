@@ -29,7 +29,7 @@ fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
     let visibility = &input.vis;
     let name = &input.sig.ident;
     let inputs = &input.sig.inputs;
-    let attributes= &input.attrs;
+    let attributes = &input.attrs;
     let output = &input.sig.output;
     let block = &input.block;
     let generics = &input.sig.generics;

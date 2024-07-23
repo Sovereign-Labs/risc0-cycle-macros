@@ -12,5 +12,5 @@ publish = true
 repository = "https://github.com/sovereign-labs/risc0-cycle-macros"
 
 [workspace.dependencies]
-risc0-zkvm = { version = "1.0", default-features = false }
+risc0-zkvm = { version = "1.0.3", default-features = false }
 risc0-zkvm-platform = { version = "1.0", features = ["export-syscalls"], default-features = false }
