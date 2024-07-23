@@ -1,7 +1,22 @@
+use std::ffi::CStr;
+
 use risc0_zkvm_platform::syscall::SyscallName;
 
-// Safety: string has null terminated
-pub const SYSCALL_NAME_METRICS: SyscallName = unsafe { SyscallName::from_bytes_with_nul("cycle_metrics\0".as_bytes().as_ptr()) };
+pub const SYSCALL_NAME_METRICS: SyscallName = compute_const_syscall_name();
+
+const fn compute_const_syscall_name() -> SyscallName {
+    let c_str = if let Ok(name) = CStr::from_bytes_with_nul(b"cycle_metrics\0") {
+        name
+    } else {
+        panic!("Failed to create syscall name")
+    };
+
+    if let Ok(syscall_name) = SyscallName::from_c_str(&c_str) {
+        syscall_name
+    } else {
+        panic!("Failed to create syscall name")
+    }
+}
 
 pub fn get_syscall_name() -> SyscallName {
     SYSCALL_NAME_METRICS
@@ -23,8 +38,8 @@ pub fn get_syscall_name_cycles() -> SyscallName {
     risc0_zkvm_platform::syscall::nr::SYS_CYCLE_COUNT
 }
 
-pub fn print_cycle_count() {
-    let metrics_syscall_name = get_syscall_name_cycles();
-    let serialized = risc0_zkvm_platform::syscall::sys_cycle_count().to_le_bytes();
-    risc0_zkvm::guest::env::send_recv_slice::<u8, u8>(metrics_syscall_name, &serialized);
-}
+// pub fn print_cycle_count() {
+//     let metrics_syscall_name = get_syscall_name_cycles();
+//     let serialized = risc0_zkvm_platform::syscall::sys_cycle_count().to_le_bytes();
+//     risc0_zkvm::guest::env::send_recv_slice::<u8, u8>(metrics_syscall_name, &serialized);
+// }

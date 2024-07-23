@@ -50,15 +50,29 @@ fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
             let mut serialized = Vec::new();
             serialized.extend(tuple.0.as_bytes());
             serialized.push(0);
-            let size_bytes = tuple.1.to_ne_bytes();
+            let size_bytes = tuple.1.to_le_bytes();
             serialized.extend(&size_bytes);
 
             // calculate the syscall name.
-            let metrics_syscall_name = unsafe {
-                #risc0_zkvm_platform::syscall::SyscallName::from_bytes_with_nul("cycle_metrics\0".as_bytes().as_ptr())
-            };
 
+            const fn compute_const_syscall_name() -> risc0_zkvm_platform::syscall::SyscallName {
+                let c_str = if let Ok(name) = std::ffi::CStr::from_bytes_with_nul(b"cycle_metrics\0") {
+                    name
+                } else {
+                    panic!("Failed to create syscall name")
+                };
+
+                if let Ok(syscall_name) = risc0_zkvm_platform::syscall::SyscallName::from_c_str(&c_str) {
+                    syscall_name
+                } else {
+                    panic!("Failed to create syscall name")
+                }
+            }
+            println!("Making syscall!");
+
+            let metrics_syscall_name = compute_const_syscall_name();
             #risc0_zkvm::guest::env::send_recv_slice::<u8,u8>(metrics_syscall_name, &serialized);
+            println!("Done with syscall");
             result
         }
     };
