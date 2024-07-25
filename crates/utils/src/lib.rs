@@ -9,10 +9,10 @@ pub fn get_syscall_name() -> SyscallName {
 
 #[cfg(feature = "native")]
 pub fn cycle_count_callback(input: risc0_zkvm::Bytes) -> risc0_zkvm::Result<risc0_zkvm::Bytes> {
-    if input.len() == std::mem::size_of::<usize>() {
-        let mut array = [0u8; std::mem::size_of::<usize>()];
+    if input.len() == std::mem::size_of::<u64>() {
+        let mut array = [0u8; std::mem::size_of::<u64>()];
         array.copy_from_slice(&input);
-        println!("== syscall ==> {}", usize::from_le_bytes(array));
+        println!("== syscall ==> {}", u64::from_le_bytes(array));
     } else {
         println!("NONE");
     }
