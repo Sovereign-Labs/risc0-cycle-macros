@@ -5,7 +5,7 @@
 
 ## risc0-cycle-macros
 * Contains the `cycle-tracker` macro which can be used to annotate functions that run inside the risc0 vm
-* In order to use the macro, the following changes need to be made
+* To use the macro, the following changes need to be made:
 * Cargo.toml
 ```toml
 [dependencies]
