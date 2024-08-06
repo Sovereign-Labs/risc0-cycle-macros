@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use risc0_cycle_macros::cycle_tracker;
+use sov_cycle_macros::cycle_tracker;
 
 struct TestStruct;
 
