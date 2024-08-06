@@ -13,9 +13,15 @@ resolver = "2"
 autotests = false
 
 [dependencies]
-risc0-zkvm = { workspace = true, default-features = false, features = ["std"] }
-risc0-zkvm-platform = { workspace = true }
+sp1-sdk = { workspace = true, default-features = false, optional = true }
+sp1-zkvm = { workspace = true, default-features = false, optional = true }
+risc0-zkvm = { workspace = true, default-features = false, features = [
+	"std",
+], optional = true }
+risc0-zkvm-platform = { workspace = true, optional = true }
 
 [features]
-default = []
+default = ["risc0"]
+risc0 = ["dep:risc0-zkvm", "dep:risc0-zkvm-platform"]
+sp1 = ["dep:sp1-sdk", "dep:sp1-zkvm"]
 native = ["risc0-zkvm/prove"]

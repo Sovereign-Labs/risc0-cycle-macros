@@ -3,8 +3,9 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, ItemFn};
+use proc_macro2::TokenStream as TokenStream2;
+use quote::ToTokens;
+use syn::{parse2, parse_quote, Block, Ident, ItemFn};
 
 /// This macro is used to annotate functions that we want to track the number of riscV cycles being
 /// generated inside the VM. The purpose of the this macro is to measure how many cycles a rust
@@ -20,47 +21,83 @@ use syn::{parse_macro_input, ItemFn};
 /// The handler for the syscall can be seen in adapters/risc0/src/host.rs and adapters/risc0/src/metrics.rs
 #[proc_macro_attribute]
 pub fn cycle_tracker(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-
-    wrap_function(input).unwrap_or_else(|err| err.to_compile_error().into())
+    let input = TokenStream2::from(item);
+    wrap_function_with(cycles, input)
+        .unwrap_or_else(|err| err.to_compile_error().into())
+        .into()
 }
 
-fn wrap_function(input: ItemFn) -> Result<TokenStream, syn::Error> {
-    let visibility = &input.vis;
-    let name = &input.sig.ident;
-    let inputs = &input.sig.inputs;
-    let attributes = &input.attrs;
-    let output = &input.sig.output;
-    let block = &input.block;
-    let generics = &input.sig.generics;
-    let where_clause = &input.sig.generics.where_clause;
-    let risc0_zkvm = syn::Ident::new("risc0_zkvm", proc_macro2::Span::call_site());
-    let risc0_zkvm_platform =
-        syn::Ident::new("risc0_zkvm_platform", proc_macro2::Span::call_site());
+/// Wrap a block with benchmarking. Fills the correct cycle counter based on the target and vendor.
+fn cycles(ident: &Ident, block: &Block) -> Box<Block> {
+    let risc0_block = cycles_risc0(ident, block);
+    let sp1_block = cycles_sp1(ident, block);
 
-    let result = quote! {
-        #( #attributes )*
-        #visibility fn #name #generics (#inputs) #output #where_clause {
-            let before = #risc0_zkvm_platform::syscall::sys_cycle_count();
-            let result = (|| #block)();
-            let after = #risc0_zkvm_platform::syscall::sys_cycle_count();
+    // Too much to require cfg-if at the call site.
+    parse_quote!({
+        #[cfg(all(target_os = "zkvm", target_vendor = "risc0"))] return #risc0_block;
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))] return #sp1_block;
+        #[cfg(not(all(target_os = "zkvm", any(target_vendor = "risc0", target_vendor = "succinct"))))]
+        #block
+    })
+}
 
-            // simple serialization to avoid pulling in bincode or other libs
-            let tuple = (stringify!(#name).to_string(), (after - before) as u64);
-            let mut serialized = Vec::new();
-            serialized.extend(tuple.0.as_bytes());
-            serialized.push(0);
-            let size_bytes = tuple.1.to_ne_bytes();
-            serialized.extend(&size_bytes);
+/// Wrap a function, where `f` wraps a block with (benchmarking) code.
+fn wrap_function_with<F>(f: F, input: TokenStream2) -> Result<TokenStream2, syn::Error>
+where
+    F: Fn(&Ident, &Block) -> Box<Block>,
+{
+    let mut input = parse2::<ItemFn>(input)?;
+    let ItemFn {
+        sig: syn::Signature { ident, .. },
+        block,
+        ..
+    } = &input;
+    input.block = f(ident, block);
 
-            // calculate the syscall name.
-            let metrics_syscall_name = unsafe {
-                #risc0_zkvm_platform::syscall::SyscallName::from_bytes_with_nul("cycle_metrics\0".as_bytes().as_ptr())
-            };
+    Ok(input.into_token_stream().into())
+}
 
-            #risc0_zkvm::guest::env::send_recv_slice::<u8,u8>(metrics_syscall_name, &serialized);
+fn cycles_risc0(ident: &Ident, block: &Block) -> Box<Block> {
+    parse_quote! {
+    {
+        let before = ::sov_cycle_utils::risc0::sys_cycle_count();
+        let result = (|| #block)();
+        let after = ::sov_cycle_utils::risc0::sys_cycle_count();
+
+        // simple serialization to avoid pulling in bincode or other libs
+        let tuple = (stringify!(#ident).to_string(), (after - before) as u64);
+        let mut serialized = Vec::new();
+        serialized.extend(tuple.0.as_bytes());
+        serialized.push(0);
+        let size_bytes = tuple.1.to_ne_bytes();
+        serialized.extend(&size_bytes);
+
+        // calculate the syscall name.
+        let metrics_syscall_name = ::sov_cycle_utils::risc0::SYSCALL_NAME_METRICS;
+
+        ::sov_cycle_utils::risc0::risc0_zkvm::guest::env::send_recv_slice::<u8,u8>(metrics_syscall_name, &serialized);
+        result
+        }
+    }
+}
+
+fn cycles_sp1(ident: &Ident, block: &Block) -> Box<Block> {
+    parse_quote!({
+       {
+            // Writing zero bytes is a no-op, so we write &[0].
+            ::sov_cycle_utils::sp1_zkvm::io::write(::sov_cycle_utils::sp1::FD_CYCLE_COUNT_HOOK, &[0]);
+            let before = u64::from_le_bytes(::sov_cycle_utils::sp1_zkvm::io::read_vec().try_into().expect("Failed to read cycle count before hook."));
+            let result = (move || #block)();
+
+            ::sov_cycle_utils::sp1_zkvm::io::write(::sov_cycle_utils::sp1::FD_CYCLE_COUNT_HOOK, &[0]);
+            let after = u64::from_le_bytes(::sov_cycle_utils::sp1_zkvm::io::read_vec().try_into().expect("Failed to read cycle count after hook."));
+
+            // Cheap serialization: concat the u64 (fixed size) with the string (unknown size).
+            let mut buf = Vec::from((after - before).to_le_bytes());
+            buf.extend_from_slice(stringify!(#ident).as_bytes());
+            ::sov_cycle_utils::sp1_zkvm::io::write(::sov_cycle_utils::sp1::FD_METRICS_HOOK, &buf);
+
             result
         }
-    };
-    Ok(result.into())
+    })
 }

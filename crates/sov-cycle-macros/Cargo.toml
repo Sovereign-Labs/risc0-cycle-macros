@@ -27,5 +27,4 @@ proc-macro2 = "1"
 [dev-dependencies]
 trybuild = "1"
 sov-cycle-macros = { path = "" }
-risc0-zkvm = { workspace = true, default-features = false, features = ["std"] }
-risc0-zkvm-platform = { workspace = true }
+sov-cycle-utils = { path = "../utils" }
