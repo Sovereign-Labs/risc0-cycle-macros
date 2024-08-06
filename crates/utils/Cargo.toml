@@ -1,5 +1,5 @@
 [package]
-name = "risc0-cycle-utils"
+name = "sov-cycle-utils"
 authors = { workspace = true }
 description = "Utilities for counting risc0 VM cycles consumed by functions"
 edition = { workspace = true }
