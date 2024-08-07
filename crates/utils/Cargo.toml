@@ -19,9 +19,11 @@ risc0-zkvm = { workspace = true, default-features = false, features = [
 	"std",
 ], optional = true }
 risc0-zkvm-platform = { workspace = true, optional = true }
+sov-cycle-macros = { path = "../sov-cycle-macros", optional = true }
 
 [features]
-default = ["risc0"]
+default = ["macros"]
+macros = ["dep:sov-cycle-macros"]
 risc0 = ["dep:risc0-zkvm", "dep:risc0-zkvm-platform"]
 sp1 = ["dep:sp1-sdk", "dep:sp1-zkvm"]
 native = ["risc0-zkvm/prove"]

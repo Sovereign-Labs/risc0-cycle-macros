@@ -59,24 +59,13 @@ where
 
 fn cycles_risc0(ident: &Ident, block: &Block) -> Box<Block> {
     parse_quote! {
-    {
-        let before = ::sov_cycle_utils::risc0::sys_cycle_count();
-        let result = (|| #block)();
-        let after = ::sov_cycle_utils::risc0::sys_cycle_count();
+        {
+            let before = ::sov_cycle_utils::risc0::get_cycle_count();
+            let result = (|| #block)();
+            let after = ::sov_cycle_utils::risc0::get_cycle_count();
 
-        // simple serialization to avoid pulling in bincode or other libs
-        let tuple = (stringify!(#ident).to_string(), (after - before) as u64);
-        let mut serialized = Vec::new();
-        serialized.extend(tuple.0.as_bytes());
-        serialized.push(0);
-        let size_bytes = tuple.1.to_ne_bytes();
-        serialized.extend(&size_bytes);
-
-        // calculate the syscall name.
-        let metrics_syscall_name = ::sov_cycle_utils::risc0::SYSCALL_NAME_METRICS;
-
-        ::sov_cycle_utils::risc0::risc0_zkvm::guest::env::send_recv_slice::<u8,u8>(metrics_syscall_name, &serialized);
-        result
+            ::sov_cycle_utils::risc0::report_cycle_count(stringify!(#ident), after - before);
+            result
         }
     }
 }
@@ -84,19 +73,11 @@ fn cycles_risc0(ident: &Ident, block: &Block) -> Box<Block> {
 fn cycles_sp1(ident: &Ident, block: &Block) -> Box<Block> {
     parse_quote!({
        {
-            // Writing zero bytes is a no-op, so we write &[0].
-            ::sov_cycle_utils::sp1_zkvm::io::write(::sov_cycle_utils::sp1::FD_CYCLE_COUNT_HOOK, &[0]);
-            let before = u64::from_le_bytes(::sov_cycle_utils::sp1_zkvm::io::read_vec().try_into().expect("Failed to read cycle count before hook."));
+            let before = ::sov_cycle_utils::sp1::get_cycle_count();
             let result = (move || #block)();
+            let after = ::sov_cycle_utils::sp1::get_cycle_count();
 
-            ::sov_cycle_utils::sp1_zkvm::io::write(::sov_cycle_utils::sp1::FD_CYCLE_COUNT_HOOK, &[0]);
-            let after = u64::from_le_bytes(::sov_cycle_utils::sp1_zkvm::io::read_vec().try_into().expect("Failed to read cycle count after hook."));
-
-            // Cheap serialization: concat the u64 (fixed size) with the string (unknown size).
-            let mut buf = Vec::from((after - before).to_le_bytes());
-            buf.extend_from_slice(stringify!(#ident).as_bytes());
-            ::sov_cycle_utils::sp1_zkvm::io::write(::sov_cycle_utils::sp1::FD_METRICS_HOOK, &buf);
-
+            ::sov_cycle_utils::sp1::report_cycle_count(stringify!(#ident), after - before);
             result
         }
     })
