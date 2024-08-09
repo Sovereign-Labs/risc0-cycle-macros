@@ -2,7 +2,6 @@
 pub use actual_impl::*;
 #[cfg(feature = "sp1")]
 mod actual_impl {
-    use sp1_zkvm;
     /// File descriptor for the cycle count hook, which is used to get the cycle count.
     /// Can be any number, as long as it doesn't conflict with default/other hooks.
     pub const FD_CYCLE_COUNT_HOOK: u32 = 1000;
@@ -21,15 +20,15 @@ mod actual_impl {
         // Cheap serialization: concat the u64 (fixed size) with the string (unknown size).
         let mut buf = Vec::from(count.to_le_bytes());
         buf.extend_from_slice(name.as_bytes());
-        sp1_zkvm::io::write(FD_METRICS_HOOK, &buf);
+        sp1_lib::io::write(FD_METRICS_HOOK, &buf);
     }
 
     /// Get the current cycle count of the sp1 zkvm, if available. Otherwise, return 0.
     pub fn get_cycle_count() -> u64 {
         // Writing zero bytes is a no-op, so we write &[0].
-        sp1_zkvm::io::write(FD_CYCLE_COUNT_HOOK, &[0]);
+        sp1_lib::io::write(FD_CYCLE_COUNT_HOOK, &[0]);
         u64::from_le_bytes(
-            sp1_zkvm::io::read_vec()
+            sp1_lib::io::read_vec()
                 .try_into()
                 .expect("Failed to read cycle count before hook."),
         )
@@ -46,6 +45,8 @@ mod facade {
         0
     }
 
-    /// Report the cycle count to the host, if available. Otherwise, this is a no-op.
-    pub fn report_cycle_count(_name: &str, _count: u64) {}
+    /// Report the cycle count to the host.
+    pub fn report_cycle_count(_name: &str, _count: u64) {
+        panic!("Reporting sp1 cycle count without sp1 feature enabled");
+    }
 }

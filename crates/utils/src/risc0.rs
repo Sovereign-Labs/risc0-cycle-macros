@@ -42,5 +42,7 @@ mod facade {
         0
     }
 
-    pub fn report_cycle_count(_name: &str, _count: u64) {}
+    pub fn report_cycle_count(_name: &str, _count: u64) {
+        panic!("Reporting cycle count without risc0 feature enabled");
+    }
 }

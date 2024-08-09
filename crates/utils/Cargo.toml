@@ -14,7 +14,7 @@ autotests = false
 
 [dependencies]
 sp1-sdk = { workspace = true, default-features = false, optional = true }
-sp1-zkvm = { workspace = true, default-features = false, optional = true }
+sp1-lib = { workspace = true, default-features = false, optional = true }
 risc0-zkvm = { workspace = true, default-features = false, features = [
 	"std",
 ], optional = true }
@@ -25,5 +25,5 @@ sov-cycle-macros = { path = "../sov-cycle-macros", optional = true }
 default = ["macros"]
 macros = ["dep:sov-cycle-macros"]
 risc0 = ["dep:risc0-zkvm", "dep:risc0-zkvm-platform"]
-sp1 = ["dep:sp1-sdk", "dep:sp1-zkvm"]
+sp1 = ["dep:sp1-sdk", "dep:sp1-lib"]
 native = ["risc0-zkvm/prove"]
