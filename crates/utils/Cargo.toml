@@ -20,6 +20,9 @@ risc0-zkvm = { workspace = true, default-features = false, features = [
 ], optional = true }
 risc0-zkvm-platform = { workspace = true, optional = true }
 sov-cycle-macros = { path = "../sov-cycle-macros", optional = true }
+once_cell = { workspace = true, features = [
+    "alloc",
+]  }
 
 [features]
 default = ["macros"]

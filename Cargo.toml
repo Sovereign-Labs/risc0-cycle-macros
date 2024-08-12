@@ -19,3 +19,4 @@ risc0-zkvm-platform = { version = "1.0", features = [
 
 sp1-lib = { version = "1", default-features =  false }
 sp1-sdk = { version = "1", default-features = false }
+once_cell = { version = "1.19.0", default-features = false, features = ["std", "critical-section"]}
