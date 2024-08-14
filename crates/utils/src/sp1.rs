@@ -9,12 +9,6 @@ mod actual_impl {
     /// Can be any number, as long as it doesn't conflict with default/other hooks.
     pub const FD_METRICS_HOOK: u32 = 1001;
 
-    pub fn cycle_count_hook(env: sp1_sdk::HookEnv, _buf: &[u8]) -> Vec<Vec<u8>> {
-        vec![Vec::from(
-            env.runtime.report.total_instruction_count().to_le_bytes(),
-        )]
-    }
-
     /// Report the cycle count to the host, if available. Otherwise, this is a no-op.
     pub fn report_cycle_count(name: &str, count: u64) {
         // Cheap serialization: concat the u64 (fixed size) with the string (unknown size).
