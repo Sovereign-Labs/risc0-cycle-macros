@@ -1,7 +1,7 @@
 [package]
 name = "sov-cycle-utils"
 authors = { workspace = true }
-description = "Utilities for counting risc0 VM cycles consumed by functions"
+description = "Utilities for counting ZK VM cycles consumed by functions"
 edition = { workspace = true }
 homepage = { workspace = true }
 license = { workspace = true }
@@ -13,19 +13,22 @@ resolver = "2"
 autotests = false
 
 [dependencies]
+anyhow = { version = "1.0", default-features = false, optional = true }
 sp1-lib = { workspace = true, default-features = false, optional = true }
 risc0-zkvm = { workspace = true, default-features = false, features = [
-	"std",
+    "std",
 ], optional = true }
 risc0-zkvm-platform = { workspace = true, optional = true }
 sov-cycle-macros = { path = "../sov-cycle-macros", optional = true }
 once_cell = { workspace = true, features = [
     "alloc",
-]  }
+] }
 
 [features]
 default = ["macros"]
 macros = ["dep:sov-cycle-macros"]
 risc0 = ["dep:risc0-zkvm", "dep:risc0-zkvm-platform"]
 sp1 = ["dep:sp1-lib"]
-native = []
+native = [
+    "dep:anyhow"
+]

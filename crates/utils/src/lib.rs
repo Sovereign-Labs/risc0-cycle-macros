@@ -5,6 +5,7 @@ pub mod sp1;
 
 #[cfg(feature = "native")]
 pub use native::{increment_metric, METRICS_HASHMAP};
+
 #[cfg(feature = "native")]
 mod native {
     use once_cell::sync::Lazy;
