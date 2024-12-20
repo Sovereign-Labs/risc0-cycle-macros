@@ -23,7 +23,7 @@ use syn::{parse2, parse_quote, Block, Ident, ItemFn};
 pub fn cycle_tracker(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = TokenStream2::from(item);
     wrap_function_with(cycles, input)
-        .unwrap_or_else(|err| err.to_compile_error().into())
+        .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
 
@@ -54,7 +54,7 @@ where
     } = &input;
     input.block = f(ident, block);
 
-    Ok(input.into_token_stream().into())
+    Ok(input.into_token_stream())
 }
 
 fn cycles_risc0(ident: &Ident, block: &Block) -> Box<Block> {

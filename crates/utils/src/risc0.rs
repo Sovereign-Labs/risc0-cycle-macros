@@ -3,7 +3,6 @@ pub use actual_impl::*;
 
 #[cfg(feature = "risc0")]
 mod actual_impl {
-    use super::*;
     #[cfg(feature = "native")]
     use anyhow::Context;
     use risc0_zkvm;
