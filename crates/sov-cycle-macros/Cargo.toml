@@ -1,6 +1,6 @@
 [package]
 name = "sov-cycle-macros"
-description = "Macros to wrap functions and emit cycle counts from the risc0 VM"
+description = "Macros to wrap functions and emit cycle counts from the ZK VM"
 authors = { workspace = true }
 edition = { workspace = true }
 homepage = { workspace = true }

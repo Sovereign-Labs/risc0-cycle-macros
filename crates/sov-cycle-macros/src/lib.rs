@@ -23,7 +23,7 @@ use syn::{parse2, parse_quote, Block, Ident, ItemFn};
 pub fn cycle_tracker(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = TokenStream2::from(item);
     wrap_function_with(cycles, input)
-        .unwrap_or_else(|err| err.to_compile_error().into())
+        .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
 
@@ -54,17 +54,19 @@ where
     } = &input;
     input.block = f(ident, block);
 
-    Ok(input.into_token_stream().into())
+    Ok(input.into_token_stream())
 }
 
 fn cycles_risc0(ident: &Ident, block: &Block) -> Box<Block> {
     parse_quote! {
         {
-            let before = ::sov_cycle_utils::risc0::get_cycle_count();
+            let cycles_before = ::sov_cycle_utils::risc0::get_cycle_count();
             let result = (|| #block)();
-            let after = ::sov_cycle_utils::risc0::get_cycle_count();
+            let cycles_after = ::sov_cycle_utils::risc0::get_cycle_count();
+            let heap_bytes_free_after = ::sov_cycle_utils::risc0::get_available_heap();
 
-            ::sov_cycle_utils::risc0::report_cycle_count(stringify!(#ident), after - before);
+            let cycles = cycles_after.saturating_sub(cycles_before);
+            ::sov_cycle_utils::risc0::report_cycle_count(stringify!(#ident), cycles, heap_bytes_free_after);
             result
         }
     }
@@ -76,8 +78,9 @@ fn cycles_sp1(ident: &Ident, block: &Block) -> Box<Block> {
             let before = ::sov_cycle_utils::sp1::get_cycle_count();
             let result = (move || #block)();
             let after = ::sov_cycle_utils::sp1::get_cycle_count();
+            let heap_bytes_free_after = ::sov_cycle_utils::sp1::get_available_heap();
 
-            ::sov_cycle_utils::sp1::report_cycle_count(stringify!(#ident), after - before);
+            ::sov_cycle_utils::sp1::report_cycle_count(stringify!(#ident), after - before, heap_bytes_free_after);
             result
         }
     })

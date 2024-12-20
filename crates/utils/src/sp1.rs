@@ -10,7 +10,7 @@ mod actual_impl {
     pub const FD_METRICS_HOOK: u32 = 1001;
 
     /// Report the cycle count to the host, if available. Otherwise, this is a no-op.
-    pub fn report_cycle_count(name: &str, count: u64) {
+    pub fn report_cycle_count(name: &str, count: u64, _free_heap_bytes: u64) {
         // Cheap serialization: concat the u64 (fixed size) with the string (unknown size).
         let mut buf = Vec::from(count.to_le_bytes());
         buf.extend_from_slice(name.as_bytes());
@@ -27,6 +27,11 @@ mod actual_impl {
                 .expect("Failed to read cycle count before hook."),
         )
     }
+
+    /// Returns how many bytes of heap are still available
+    pub fn get_available_heap() -> u64 {
+        0x0C00_0000
+    }
 }
 
 #[cfg(not(feature = "sp1"))]
@@ -40,7 +45,11 @@ mod facade {
     }
 
     /// Report the cycle count to the host.
-    pub fn report_cycle_count(_name: &str, _count: u64) {
+    pub fn report_cycle_count(_name: &str, _count: u64, _free_heap_bytes: u64) {
         panic!("Reporting sp1 cycle count without sp1 feature enabled");
+    }
+
+    pub fn get_available_heap() -> u64 {
+        0x0C00_0000
     }
 }
